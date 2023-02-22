@@ -45,6 +45,7 @@ read -r -p "Enter OlAksClusterName: " EJB01OlAksClusterName
 read -r -p "Enter OlAksResourceGroup: " EJB01OlAksResourceGroup
 read -r -p "Enter azureACRServer: " EJB01azureACRServer
 read -r -p "Enter azureACRUserName: " EJB01azureACRUserName
+read -r -p "Enter azureACRPassword: " AZURE_OPEN_LIBERTY_ACR_PASSWORD
 read -r -p "Enter dbName: " EJB01dbName
 
 # get OWNER_REPONAME if not set at the beginning of this file
@@ -95,6 +96,8 @@ if [ $USE_GITHUB_CLI == false ]; then
   msg "${GREEN}${EJB01azureACRServer}"
   msg "${YELLOW}\"EJB01azureACRUserName\""
   msg "${GREEN}${EJB01azureACRUserName}"
+  msg "${YELLOW}\"AZURE_OPEN_LIBERTY_ACR_PASSWORD\""
+  msg "${GREEN}${AZURE_OPEN_LIBERTY_ACR_PASSWORD}"
   msg "${YELLOW}\"EJB01dbName\""
   msg "${GREEN}${EJB01dbName}"
   msg "${NOFORMAT}========================================================================"

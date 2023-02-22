@@ -13,20 +13,25 @@ on:
   repository_dispatch:
 
 env:
-    refArmttk: d97aa57d259e2fc8562e11501b1cf902265129d9
-    refJavaee: 85d5d10dd045a90452ae01cad20b258ce853ec18
-    azCliVersion: 2.30.0
+    refArmttk: c11a62d4ae011ee96fdecc76d76d811c5b5a99ce
+    refJavaee: b728442f1921282f5f3902fe5bdf7f4d2c7872ca
+    azCliVersion: 2.40.0
     azureCredentials: ${{ secrets.AZURE_CREDENTIALS }}
     location: ${{ github.event.inputs.region }}
     resourceGroupForOpenLibertyAks: ol-aks-${{ github.event.inputs.disambiguationSuffix }}-${{ github.run_number }}
-    userAssignedManagedIdentity: ${{ secrets.USER_ASSIGNED_MANAGED_IDENTITY_ID }}
     aksRepoUserName: WASdev
-    aksRepoBranchName: 3f57f29d36538edd03b4ed3c854d523cc009b0af
+    aksRepoBranchName: b37f5abcb3085ed4220287abe9f76fbda67ebe3e
 
 jobs:
     preflight:
         runs-on: ubuntu-latest
         steps:
+        - name: Set up bicep
+          run: |
+            curl -Lo bicep https://github.com/Azure/bicep/releases/download/v0.11.1/bicep-linux-x64
+            chmod +x ./bicep
+            sudo mv ./bicep /usr/local/bin/bicep
+            bicep --version
         - name: Checkout azure-javaee-iaas
           uses: actions/checkout@v2
           with:
@@ -50,12 +55,12 @@ jobs:
           with:
             java-version: 1.8
         - name: Build azure-javaee-iaas
-          run: mvn -DskipTests clean install --file azure-javaee-iaas/pom.xml
+          run: mvn clean install --file azure-javaee-iaas/pom.xml
 
         - name: Build and test ${{ env.aksRepoUserName }}/azure.liberty.aks
           run: |
             cd azure.liberty.aks
-            mvn -Ptemplate-validation-tests clean install
+            mvn -Pbicep -Ddev -Passembly -Ptemplate-validation-tests clean install
         - name: Generate artifact file name and path
           id: artifact_file
           run: |
@@ -115,15 +120,14 @@ jobs:
               run: |
                 echo "replace placeholders using real parameter"
                 sed -i "s/#location#/${location}/g; \
-                        s/#userAssignedManagedIdentity#/${userAssignedManagedIdentity}/g; \
                         s/#testbranchName#/${aksRepoBranchName}/g; \
                         s/#gitUserName#/${aksRepoUserName}/g" \
-                        cargotracker/cargotracker-liberty/src/test/aks/parameters.json
+                        cargotracker/src/test/aks/parameters.json
             - name: Archive parameters.json
               uses: actions/upload-artifact@v1
               with:
                 name: archivefiles
-                path: cargotracker/cargotracker-liberty/src/test/aks/parameters.json
+                path: cargotracker/src/test/aks/parameters.json
             - name: Validate Deploy of Open Liberty Server Cluster Domain offer
               id: validate-openliberty-cluster-deployment
               uses: azure/CLI@v1
@@ -134,7 +138,7 @@ jobs:
                     --debug \
                     --resource-group ${{ env.resourceGroupForOpenLibertyAks }} \
                     --name openliberty-on-aks \
-                    --parameters @cargotracker/cargotracker-liberty/src/test/aks/parameters.json \
+                    --parameters @cargotracker/src/test/aks/parameters.json \
                     --template-file ${artifactName}/mainTemplate.json
             - name: Deploy Open Liberty Server Cluster Domain offer
               id: deploy-openliberty-cluster
@@ -146,5 +150,5 @@ jobs:
                     --verbose \
                     --resource-group ${{ env.resourceGroupForOpenLibertyAks }} \
                     --name openliberty-on-aks \
-                    --parameters @cargotracker/cargotracker-liberty/src/test/aks/parameters.json \
+                    --parameters @cargotracker/src/test/aks/parameters.json \
                     --template-file ${artifactName}/mainTemplate.json

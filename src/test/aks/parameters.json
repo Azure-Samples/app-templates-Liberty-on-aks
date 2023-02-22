@@ -8,14 +8,6 @@
         "location": {
             "value": "#location#"
         },
-        "identity": {
-            "value": {
-                "type": "UserAssigned",
-                "userAssignedIdentities": {
-                    "#userAssignedManagedIdentity#": {}
-                }
-            }
-        },
         "createCluster": {
             "value": true
         },
