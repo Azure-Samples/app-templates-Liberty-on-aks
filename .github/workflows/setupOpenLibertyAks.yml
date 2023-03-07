@@ -199,6 +199,7 @@ jobs:
             --template-file ${artifactName}/mainTemplate.json
 
   deploy-cargo-tracker:
+    needs: [deploy-db,deploy-openliberty-on-aks]
     runs-on: ubuntu-20.04
     steps:
       - name: Prepare variables
