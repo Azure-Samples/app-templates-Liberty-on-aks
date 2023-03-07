@@ -357,4 +357,4 @@ jobs:
       # Print app URL to the pipeline summary page.
       - name: Print app URL
         run: |
-          echo "${appURL}" >> $GITHUB_STEP_SUMMARY
+          echo "http://${appURL}" >> $GITHUB_STEP_SUMMARY

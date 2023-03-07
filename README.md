@@ -1,144 +1,190 @@
-# Eclipse Cargo Tracker - Applied Domain-Driven Design Blueprints for Jakarta EE
+# Open Liberty Cargo Tracker Application Deployed to Azure Kubernetes Service (AKS)
 
-The project demonstrates how you can develop applications with Jakarta EE using widely adopted architectural best practices like Domain-Driven 
-Design (DDD). The project is directly based on the well known 
-original [Java DDD sample application](http://dddsample.sourceforge.net) 
-developed by DDD pioneer Eric Evans' company Domain Language and the Swedish 
-software consulting company Citerus. The cargo example actually comes from 
-Eric Evans' seminal book on DDD. The original application is written in Spring,
-Hibernate and Jetty whereas the application is built on Jakarta EE.
+## Description
 
-The application is an end-to-end system for keeping track of shipping cargo. It 
-has several interfaces described in the following sections.
+This is a sample app template of the Domain-Driven Design Jakarta EE application. The application is built with Maven and deployed to Open Liberty running in Azure Kubernetes Service (AKS). The app template uses the [official Azure offer for running Liberty on AKS](https://aka.ms/liberty-aks). The application is exposed by Azure Load Balancer service via Public IP address.
 
-For further details on the project, please visit: https://eclipse-ee4j.github.io/cargotracker/.
+## Deploy Open Liberty Application to Azure Kubernetes Service:
 
-A slide deck introducing the
-fundamentals of the project is available on the official Eclipse 
-Foundation [Jakarta EE SlideShare account](https://www.slideshare.net/Jakarta_EE/applied-domaindriven-design-blueprints-for-jakarta-ee).
+--
+Tech stack:
 
-![Cargo Tracker cover](cargo_tracker_cover.png)
- 
+- Azure Container Registry
+- Azure Kubernetes Service
+- Azure PostgreSQL DB
+- GitHub Actions
+- Bicep
+- Docker
+- Maven
+- Java
+
+---
+
+## Introduction
+
+This is a quickstart template. It deploys the following:
+
+* Deploying Cargo Tracker App:
+  * Create ProgresSQL Database
+  * Create the Cargo Tracker - build with Maven
+  * Provisioning Azure Infra Services with ARM templates - build with BICEP
+    * Create an Azure Container Registry
+    * Create an Azure Kubernetes Service
+    * Build your app, Open Liberty into an image
+    * Push your app image to the container registry
+    * Deploy your app to AKS
+    * Expose your app with the Azure Load Balancer service
+  * Verify your app
+
+* Cargo Tracker on Automated CI/CD with GitHub Action
+  * CI/CD on GitHub Action
+  * CI/CD in action with the app
+
+> Refer to the [App Templates](https://github.com/microsoft/App-Templates) repo Readme for more samples that are compatible with [AzureAccelerators](https://github.com/Azure/azure-dev/).
+
+## Prerequisites
+
+- Local shell with Azure CLI installed or [Azure Cloud Shell](https://ms.portal.azure.com/#cloudshell/)
+- Azure Subscription, on which you are able to create resources and assign permissions
+  - View your subscription using ```az account show``` 
+  - If you don't have an account, you can [create one for free](https://azure.microsoft.com/free). 
+- GitHub CLI (optional, but strongly recommended). To install the GitHub CLI on your dev environment, see [Installation](https://cli.github.com/manual/installation).
+
+
 ## Getting Started
 
-The [project website](https://eclipse-ee4j.github.io/cargotracker/) has detailed information on how to get started.
+1. Fork the repository by clicking the 'Fork' button on the top right of the page.
+This creates a local copy of the repository for you to work in. 
 
-The simplest steps are the following (no IDE required):
+2. Configure GITHUB Actions:  Follow the instructions in the [GITHUB_ACTIONS_CONFIG.md file](.github/GITHUB_ACTIONS_CONFIG.md) (Located in the .github folder.)
 
-* Get the project source code.
-* Ensure you are running Java SE 8 or Java SE 11.
-* Make sure JAVA_HOME is set.
-* As long as you have Maven set up properly, navigate to the project source root and 
-  type: `mvn clean package cargo:run`
-* Go to http://localhost:8080/cargo-tracker
+4. Manually run the workflow
 
-To set up in Eclipse, follow these steps:
+* Under your repository name, click Actions.
+* In the left sidebar, click the workflow "Setup OpenLiberty on AKS".
+* Above the list of workflow runs, select Run workflow.
+* Configure the workflow.
+  + Use the Branch dropdown to select the workflow's main branch.
+  + For **Included in names to disambiguate. Get from another pipeline execution**, enter disambiguation prefix, e.g. `test01`.
 
-* Set up Java SE 8 or Java SE 11, [Eclipse for Enterprise Java Developers](https://www.eclipse.org/downloads/packages/) and [Payara 5](https://www.payara.fish/downloads/). You will also need to set up [Payara Tools](https://marketplace.eclipse.org/content/payara-tools) in Eclipse.
-* Import this code in Eclipse as a Maven project, 
-  Eclipse will do the rest for you. Proceed with clean/building the application.
-* After the project is built (which will take a while the very first time as Maven downloads dependencies), simply run it via Payara 5.
+5. Click Run workflow.
 
-## Exploring the Application
+## Workflow description
 
-After the application runs, it will be available at: 
-http://localhost:8080/cargo-tracker/. Under the hood, the application uses a 
-number of Jakarta EE features including Faces, CDI, Enterprise Beans, Persistence, REST, Batch, JSON Binding, Bean Validation and Messaging.
+As mentioned above, the app template uses the [official Azure offer for running Liberty on AKS](https://aka.ms/liberty-aks). The workflow uses the source code behind that offer by checking it out and invoking it from Azure CLI.
 
-There are several web interfaces, REST interfaces and a file system scanning
-interface. It's probably best to start exploring the interfaces in the rough
-order below.
+### Job: preflight
 
-The tracking interface let's you track the status of cargo and is
-intended for the general public. Try entering a tracking ID like ABC123 (the 
-application is pre-populated with some sample data).
+This job is to build Liberty on AKS template into a ZIP file containing the ARM template to invoke.
 
-The administrative interface is intended for the shipping company that manages
-cargo. The landing page of the interface is a dashboard providing an overall 
-view of registered cargo. You can book cargo using the booking interface.
-One cargo is booked, you can route it. When you initiate a routing request,
-the system will determine routes that might work for the cargo. Once you select
-a route, the cargo will be ready to process handling events at the port. You can
-also change the destination for cargo if needed or track cargo.
+* Set up environment to build the Liberty on AKS templates
+  + Set up JDK 1.8
+  + Set up bicep 0.11.1
 
-The Handling Event Logging interface is intended for port personnel registering what 
-happened to cargo. The interface is primarily intended for mobile devices, but
-you can use it via a desktop browser. The interface is accessible at this URL: http://localhost:8080/cargo-tracker/event-logger/index.xhtml. For convenience, you
-could use a mobile emulator instead of an actual mobile device. Generally speaking cargo
-goes through these events:
+* Download dependencies
+  + Checkout azure-javaee-iaas, this is a precondition necessary to build Liberty on AKS templates. For more details, see [Azure Marketplace Azure Application (formerly known as Solution Template) Helpers](https://github.com/Azure/azure-javaee-iaas).
 
-* It's received at the origin location.
-* It's loaded and unloaded onto voyages on it's itinerary.
-* It's claimed at it's destination location.
-* It may go through customs at arbitrary points.
+* Checkout and build Liberty on AKS templates
+  + Checkout ${{ env.aksRepoUserName }}/azure.liberty.aks. Checkout [WASdev/azure.liberty.aks](https://github.com/WASdev/azure.liberty.aks) by default. This repository contains all the BICEP templates that provision Azure resources, configure Liberty and deploy app to AKS. 
+  + Build and test ${{ env.aksRepoUserName }}/azure.liberty.aks. Build and package the Liberty on AKS templates into a ZIP file (e.g. azure.liberty.aks-1.0.32-arm-assembly.zip). The structure of the ZIP file is:
 
-While filling out the event registration form, it's best to have the itinerary 
-handy. You can access the itinerary for registered cargo via the admin interface. The cargo handling is done via Messaging for scalability. While using the event logger, note that only the load and unload events require as associated voyage.
+    ```text
+    ├── mainTemplate.json (ARM template that is built from BICEP files, which will be invoked for the following deployments)
+    └── scripts (shell scripts and metadata)
+    ```
 
-You should also explore the file system based bulk event registration interface. 
-It reads files under /tmp/uploads. The files are just CSV files. A sample CSV
-file is available under [src/test/sample/handling_events.csv](src/test/sample/handling_events.csv). The sample is already set up to match the remaining itinerary events for cargo ABC123. Just make sure to update the times in the first column of the sample CSV file to match the itinerary as well.
+  + Archive Archive azure.liberty.aks template template. Upload the ZIP file to the pipeline. The later jobs will download the ZIP file for further deployments.
 
-Sucessfully processed entries are archived under /tmp/archive. Any failed records are 
-archived under /tmp/failed.
+### Job: deploy-db
 
-Don't worry about making mistakes. The application is intended to be fairly 
-error tolerant. If you do come across issues, you should [report them](https://github.com/eclipse-ee4j/cargotracker/issues).
+This job is to deploy PostgreSQL server and configure firewall setting.
 
-You can simply remove ./cargo-tracker-database from the file system to restart fresh. This directory will typically be under $your-payara-installation/glassfish/domains/domain1/config.
+* Set Up Azure Database for PostgreSQL
+  + azure-login. Login Azure.
+  + Create Resource Group. Create a resource group to which the database will deploy.
+  + Set Up Azure Postgresql to Test dbTemplate. Provision Azure Database for PostgreSQL Single Server. The server allows access from Azure services.
 
-You can also use the soapUI scripts included in the source code to explore the 
-REST interfaces as well as the numerous unit tests covering the code base 
-generally. Some of the tests use Arquillian.
+### Job: deploy-openliberty-on-aks
 
-## Exploring the Code
+This job is to provision Azure resources, run Open Liberty Operator on AKS using the solution template.
 
-As mentioned earlier, the real point of the application is demonstrating how to 
-create well architected, effective Jakarta EE applications. To that end, once you 
-have gotten some familiarity with the application functionality the next thing 
-to do is to dig right into the code.
+* Download the Liberty on AKS solution template
+  + Checkout ${{ env.aksRepoUserName }}/azure.liberty.aks. Checkout [WASdev/azure.liberty.aks](https://github.com/WASdev/azure.liberty.aks) to find the version information.
+  + Get version information from azure.liberty.aks/pom.xml. Get the version info for solution template ZIP file, which is used to generate the ZIP file name: `azure.liberty.aks-${version}-arm-assembly.zip`
+  + Output artifact name for Download action. Generate and output the ZIP file name: `azure.liberty.aks-${version}-arm-assembly.zip`.
+  + Download artifact for deployment. Download the ZIP file that is built in job:preflight.
 
-DDD is a key aspect of the architecture, so it's important to get at least a 
-working understanding of DDD. As the name implies, Domain-Driven Design is an 
-approach to software design and development that focuses on the core domain and 
-domain logic.
+* Deploy Liberty on AKS
+  + azure-login. Login Azure.
+  + Create Resource Group. Create a resource group for Liberty on AKS.
+  + Checkout cargotracker. Checkout the parameter template.
+  + Prepare parameter file. Set values to the parameters.
+  + Validate Deploy of Open Liberty Server Cluster Domain offer. Validate the parameters file in the context of the bicep template to be invoked. This will catch some errors before taking the time to start the full deployment. `--template-file` is the mainTemplate.json from solution template ZIP file. `--parameters` is the parameter file created in last step.
+  + Deploy Open Liberty Server Cluster Domain offer. Invoke the mainTemplate.json to deploy resources and configurations. After the deployment completes, you'll get the following result:
+    + An Azure Container Registry. It'll store app image in the later steps.
+    + An Azure Kubernetes Service with Open Liberty Operator running in `default` namespace.
 
-For the most part, it's fine if you are new to Jakarta EE. As long as you have a
-basic understanding of server-side applications, the code should be good enough to get started. For learning Jakarta EE further,
-we have recommended a few links in the resources section of the project site. Of 
-course, the ideal user of the project is someone who has a basic working 
-understanding both Jakarta EE and DDD. Though it's not our goal to become a kitchen 
-sink example for demonstrating the vast amount of APIs and features in Jakarta EE,
-we do use a very representative set. You'll find that you'll learn a fair amount
-by simply digging into the code to see how things are implemented.
+### Job: deploy-cargo-tracke
 
-## Cloud Demo
-Cargo Tracker is deployed to Kubernetes on the cloud using GitHub Actions workflows. You can find the demo deployment on the Scaleforce cloud (https://cargo-tracker.j.scaleforce.net). This project is very thankful to our sponsors [Jelastic](https://jelastic.com) and [Scaleforce](https://www.scaleforce.net) for hosting the demo! The deployment and all data is refreshed nightly. On the cloud Cargo Tracker uses PostgreSQL as the database. The [GitHub Container Registry](https://ghcr.io/eclipse-ee4j/cargo-tracker) is used to publish Docker images.
+This job is to build app, push it to ACR and apply it to Open Liberty server running on AKS.
 
-![Cargo Tracker sponsors](sponsors.png)
+* Prepare env
+  + Set up JDK 1.8。
+  + Install jq.
+  + Prepare variables. Obtain AKS and ACR resource properties that will be used in later deployment.
 
-## Java EE 7
-A Java EE 7, Java SE 8, Payara 4.1 version of Cargo Tracker is available under the ['javaee7' branch](https://github.com/eclipse-ee4j/cargotracker/tree/javaee7).
+* Deploy Cargo Tracker
+  + Checkout cargotracker. Checkout source code of cargo tracker from this repository.
+  + Build the app. Set required environment variables and build cargo tracker with Maven.
+  + Query version string for deployment verification. Obtain the app version string for later verification.
+  + Build image and upload to ACR. Build cargo tracker into a docker image with docker file locating in [Dockerfile](Dockerfile), and push the image to ACR.
+  + Connect to AKS cluster. Connect to AKS cluster to deploy cargo tracker.
+  + Apply deployment files. Apply data source configuration in `target/db-secret.yaml` and cargo tracker metadata in `target/openlibertyapplication.yaml`. This will cause cargo tracker deployed to the AKS cluster.
+  + Verify pods are ready. Make sure cargo tracker is live.
+  + Query Application URL. Obtain cargo tracker URL.
+  + Verify that the app is update. Make sure cargo tracker is running by validating its version string.
+  + Print app URL. Print the cargo tracker URL to pipeline summary page. Now you'are able to access cargo tracker with the URL from your browser.
 
-## Contributing
-This project complies with the [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html). You can use the [google-java-format](https://github.com/google/google-java-format) tool to help you comply with the Google Java Style Guide. You can use the tool with most major IDEs such as Eclipse and IntelliJ.
+## Cargo Tracker Website
 
-In addition, for all XML, XHTML and HTML files we use a column/line width of 100 and we use 4 spaces for indentation. Please adjust the formatting settings of your IDE accordingly.
+![Cargo Tracker Website](cargo_tracker_website.png)
 
-For further guidance on contributing including the project roadmap, please look [here](CONTRIBUTING.md).
+If you wish to view the Cargo Tracker Deployment, you have the following options:
 
-## Known Issues
-* When you load the project in the Eclipse IDE, you may get some spurious validation failure messages on the pom.xml file. These are harmless and the Maven build is just 
-  fine. You can simply ignore these false validation messages or delete them by going to Markers -> XML Problem.
-* When you load the project in the Eclipse IDE, you may get some spurious validation failure messages on the web.xml file. These are harmless and the war configuration is
-  just fine. You can simply ignore these false validation messages or delete them by going to Markers -> XML Problem and Markers -> Language Servers.  
-* You may get a log message stating that Payara SSL certificates have expired. This won't get in the way of functionality, but it will
-  stop log messages from being printed to the IDE console. You can solve this issue by manually removing the expired certificates from the Payara domain, as 
-  explained [here](https://github.com/payara/Payara/issues/3038).
-* If you restart the application a few times, you will run into a bug causing a spurious deployment failure. While the problem can be annoying, it's harmless.
-  Just re-run the application (make sure to completely un-deploy the application and shut down Payara first).
-* Sometimes when the server is not shut down correctly or there is a locking/permissions issue, the H2 database that 
-  the application uses get's corrupted, resulting in strange database errors. If 
-  this occurs, you will need to stop the application and clean the database. You 
-  can do this by simply removing ./cargo-tracker-database from the file 
-  system and restarting the application. This directory will typically be under $your-payara-installation/glassfish/domains/domain1/config.
+- Open the pipeline "Setup OpenLiberty on AKS". You will find the **Summary** page.
+- Scroll down to **summarize summary**, you'll find the app URL.
+- Open your web browser, navigate to the application URL, you will see the Cargo Tracker landing page.
+
+## Exercise Cargo Tracker Functionality
+
+1. On the main page, select **Public Tracking Interface** in new window. 
+
+   1. Enter **ABC123** and select **Track!**
+
+   1. Observe what the **next expected activity** is.
+
+1. On the main page, select **Administration Interface**, then, in the left navigation column select **Live** in a new window.  This opens up a map view.
+
+   1. Mouse over the pins and find the one for **ABC123**.  Take note of the information in the hover window.
+
+1. On the main page, select **Mobile Event Logger**.  This opens up in a new, small, window.
+
+1. Drop down the menu and select **ABC123**.  Select **Next**.
+
+1. Select the **Location** using the information in the **next expected activity**.  Select **Next**.
+
+1. Select the **Event Type** using the information in the **next expected activity**.  Select **Next**.
+
+1. Select the **Voyage** using the information in the **next expected activity**.  Select **Next**.
+
+1. Set the **Completion Date** a few days in the future.  Select **Next**.
+
+1. Review the information and verify it matches the **next expected activity**.  If not, go back and fix it.  If so, select **Submit**.
+
+1. Back on the **Public Tracking Interface** select **Tracking** then enter **ABC123** and select **Track**.  Observe that a different. **next expected activity** is listed.
+
+1. If desired, go back to **Mobile Event Logger** and continue performing the next activity.
+
+## Learn more about Cargo Tracker
+
+See [Eclipse Cargo Tracker - Applied Domain-Driven Design Blueprints for Jakarta EE](cargo-tracker.md)
