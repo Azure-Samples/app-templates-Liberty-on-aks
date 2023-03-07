@@ -76,8 +76,8 @@ jobs:
           version=$(awk '/<version>[^<]+<\/version>/{gsub(/<version>|<\/version>/,"",$1);print $1;exit;}' azure.liberty.aks/pom.xml)
           artifactName=azure.liberty.aks-$version-arm-assembly
           unzip azure.liberty.aks/target/$artifactName.zip -d azure.liberty.aks/target/$artifactName
-          echo "##[set-output name=artifactName;]${artifactName}"
-          echo "##[set-output name=artifactPath;]azure.liberty.aks/target/$artifactName"
+          echo "artifactName=${artifactName}" >> $GITHUB_OUTPUT
+          echo "artifactPath=azure.liberty.aks/target/$artifactName" >> $GITHUB_OUTPUT
       # Make the contents of the zip file available for use later in the workflow.
       - name: Archive azure.liberty.aks template
         uses: actions/upload-artifact@v1
@@ -145,7 +145,7 @@ jobs:
         run: |
           artifactName=azure.liberty.aks-$version-arm-assembly
           echo "artifactName=${artifactName}" >> $GITHUB_ENV
-          echo "##[set-output name=artifactName;]${artifactName}"
+          echo "artifactName=${artifactName}" >> $GITHUB_OUTPUT
       - name: Download artifact for deployment
         uses: actions/download-artifact@v1
         with:

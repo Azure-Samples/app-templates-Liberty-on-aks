@@ -152,7 +152,7 @@ This job is to build app, push it to ACR and apply it to Open Liberty server run
 If you wish to view the Cargo Tracker Deployment, you have the following options:
 
 - Open the pipeline "Setup OpenLiberty on AKS". You will find the **Summary** page.
-- Scroll down to **summarize summary**, you'll find the app URL.
+- Scroll down to **deploy-cargo-tracker summary**, you'll find the app URL.
 - Open your web browser, navigate to the application URL, you will see the Cargo Tracker landing page.
 
 ## Exercise Cargo Tracker Functionality
