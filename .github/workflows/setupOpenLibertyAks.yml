@@ -202,7 +202,19 @@ jobs:
     needs: [deploy-db,deploy-openliberty-on-aks]
     runs-on: ubuntu-20.04
     steps:
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Install jq
+        run: |
+          sudo apt-get install jq -y
+      - uses: azure/login@v1
+        id: azure-login
+        with:
+          creds: ${{ env.azureCredentials }}
       - name: Prepare variables
+        id: prepare_variables
         run: |
           echo "Query AKS cluster name"
           aksClusterName=$(az aks list  -g ${{env.resourceGroupForOpenLibertyAks}} --query [0].name -o tsv)
@@ -218,24 +230,13 @@ jobs:
             exit 1
           fi
 
-          azureACRServer=$(az acr show -n $acrName --query 'loginServer' -o tsv)
-          azureACRUserName=$(az acr credential show -n $acrName --query 'username' -o tsv)
-          azureACRPassword=$(az acr credential show -n $acrName --query 'passwords[0].value' -o tsv)
+          azureACRServer=$(az acr show -n $acrName -g ${{env.resourceGroupForOpenLibertyAks}} --query 'loginServer' -o tsv)
+          azureACRUserName=$(az acr credential show -n $acrName -g ${{env.resourceGroupForOpenLibertyAks}} --query 'username' -o tsv)
+          azureACRPassword=$(az acr credential show -n $acrName -g ${{env.resourceGroupForOpenLibertyAks}} --query 'passwords[0].value' -o tsv)
 
-          echo "azureACRServer=${azureACRServer}" >> $GITHUB_ENV
-          echo "azureACRUserName=${azureACRUserName}" >> $GITHUB_ENV
-          echo "azureACRPassword=${azureACRPassword}" >> $GITHUB_ENV
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
-        with:
-          java-version: 1.8
-      - name: Install jq
-        run: |
-          sudo apt-get install jq -y
-      - uses: azure/login@v1
-        id: azure-login
-        with:
-          creds: ${{ env.azureCredentials }}
+          echo "azureACRServer=${azureACRServer}" >> $GITHUB_OUTPUT
+          echo "azureACRUserName=${azureACRUserName}" >> $GITHUB_OUTPUT
+          echo "azureACRPassword=${azureACRPassword}" >> $GITHUB_OUTPUT
       - name: Checkout cargotracker
         uses: actions/checkout@v2
         with:
@@ -244,13 +245,13 @@ jobs:
         run: |
           echo "build the Cargo Tracker web app"
           echo "setup environment variables"
-          export LOGIN_SERVER=${azureACRServer}
-          export USER_NAME=${azureACRUserName}
-          export PASSWORD=${azureACRPassword}
+          export LOGIN_SERVER=${{steps.prepare_variables.outputs.azureACRServer}}
+          export USER_NAME=${{steps.prepare_variables.outputs.azureACRUserName}}
+          export PASSWORD=${{steps.prepare_variables.outputs.azureACRPassword}}
           export DB_SERVER_NAME=${{ env.dbName }}.postgres.database.azure.com
           export DB_PORT_NUMBER=5432
           export DB_NAME=postgres
-          export DB_USER=${{ env.dbAdminUser }}
+          export DB_USER=${{ env.dbAdminUser }}@${{ env.dbName }}
           export DB_PASSWORD=${{ env.dbPassword }}
           export NAMESPACE=${{ env.namespace }}
           mvn clean install -PopenLibertyOnAks --file cargotracker/pom.xml
@@ -270,10 +271,10 @@ jobs:
           echo "build image and upload"
           cd target/
           docker build -t ${IMAGE_NAME}:${IMAGE_VERSION} --pull --file=Dockerfile .
-          docker tag ${IMAGE_NAME}:${IMAGE_VERSION} ${{ env.azureACRServer }}/${IMAGE_NAME}:${IMAGE_VERSION}
-          docker login -u ${{ env.azureACRUserName }} -p ${{ env.azureACRPassword }} ${{ env.azureACRServer }}
+          docker tag ${IMAGE_NAME}:${IMAGE_VERSION} ${{steps.prepare_variables.outputs.azureACRServer}}/${IMAGE_NAME}:${IMAGE_VERSION}
+          docker login -u ${{steps.prepare_variables.outputs.azureACRUserName}} -p ${{steps.prepare_variables.outputs.azureACRPassword}} ${{steps.prepare_variables.outputs.azureACRServer}}
 
-          docker push ${{ env.azureACRServer }}/${IMAGE_NAME}:${IMAGE_VERSION}
+          docker push ${{steps.prepare_variables.outputs.azureACRServer}}/${IMAGE_NAME}:${IMAGE_VERSION}
       - name: Connect to AKS cluster
         run: |
           echo "connect to cluster"
