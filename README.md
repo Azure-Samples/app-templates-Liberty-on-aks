@@ -124,7 +124,7 @@ This job is to provision Azure resources, run Open Liberty Operator on AKS using
     + An Azure Container Registry. It'll store app image in the later steps.
     + An Azure Kubernetes Service with Open Liberty Operator running in `default` namespace.
 
-### Job: deploy-cargo-tracke
+### Job: deploy-cargo-tracker
 
 This job is to build app, push it to ACR and apply it to Open Liberty server running on AKS.
 
@@ -134,16 +134,16 @@ This job is to build app, push it to ACR and apply it to Open Liberty server run
   + Prepare variables. Obtain AKS and ACR resource properties that will be used in later deployment.
 
 * Deploy Cargo Tracker
-  + Checkout cargotracker. Checkout source code of cargo tracker from this repository.
-  + Build the app. Set required environment variables and build cargo tracker with Maven.
+  + Checkout cargotracker. Checkout source code of Cargo Tracker from this repository.
+  + Build the app. Set required environment variables and build Cargo Tracker with Maven.
   + Query version string for deployment verification. Obtain the app version string for later verification.
-  + Build image and upload to ACR. Build cargo tracker into a docker image with docker file locating in [Dockerfile](Dockerfile), and push the image to ACR.
-  + Connect to AKS cluster. Connect to AKS cluster to deploy cargo tracker.
-  + Apply deployment files. Apply data source configuration in `target/db-secret.yaml` and cargo tracker metadata in `target/openlibertyapplication.yaml`. This will cause cargo tracker deployed to the AKS cluster.
-  + Verify pods are ready. Make sure cargo tracker is live.
-  + Query Application URL. Obtain cargo tracker URL.
-  + Verify that the app is update. Make sure cargo tracker is running by validating its version string.
-  + Print app URL. Print the cargo tracker URL to pipeline summary page. Now you'are able to access cargo tracker with the URL from your browser.
+  + Build image and upload to ACR. Build Cargo Tracker into a docker image using docker file locating in [Dockerfile](app-templates-Liberty-on-aks/src/main/liberty/docker/Dockerfile), and push the image to ACR.
+  + Connect to AKS cluster. Connect to AKS cluster to deploy Cargo Tracker.
+  + Apply deployment files. Apply data source configuration in `target/db-secret.yaml` and Cargo Tracker metadata in `target/openlibertyapplication.yaml`. This will cause Cargo Tracker deployed to the AKS cluster.
+  + Verify pods are ready. Make sure Cargo Tracker is live.
+  + Query Application URL. Obtain Cargo Tracker URL.
+  + Verify that the app is update. Make sure Cargo Tracker is running by validating its version string.
+  + Print app URL. Print the Cargo Tracker URL to pipeline summary page. Now you'are able to access Cargo Tracker with the URL from your browser.
 
 ## Cargo Tracker Website
 
