@@ -41,26 +41,26 @@ jobs:
           bicep --version
       # This is a precondition necessary to generate the bicep file to deploy Liberty on AKS.
       - name: Checkout azure-javaee-iaas
-        uses: actions/checkout@v2
+        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
         with:
           repository: Azure/azure-javaee-iaas
           path: azure-javaee-iaas
           ref: ${{ env.refJavaee }}
       - name: Checkout arm-ttk
-        uses: actions/checkout@v2
+        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
         with:
           repository: Azure/arm-ttk
           path: arm-ttk
           ref: ${{ env.refArmttk }}
       # Check out the repository containing the code to deploy Liberty on AKS.
       - name: Checkout ${{ env.aksRepoUserName }}/azure.liberty.aks
-        uses: actions/checkout@v2
+        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
         with:
           repository: ${{ env.aksRepoUserName }}/azure.liberty.aks
           path: azure.liberty.aks
           ref: ${{ env.aksRepoBranchName }}
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@0f62d2ad8407a414cddd4790bed06fd9ebda0f56 # v1.4.5
         with:
           java-version: 1.8
       - name: Build azure-javaee-iaas
@@ -80,7 +80,7 @@ jobs:
           echo "artifactPath=azure.liberty.aks/target/$artifactName" >> $GITHUB_OUTPUT
       # Make the contents of the zip file available for use later in the workflow.
       - name: Archive azure.liberty.aks template
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@3446296876d12d4e3a0f3145a3c87e67bf0a16b5 # v1.0.0
         if: success()
         with:
           name: ${{steps.artifact_file.outputs.artifactName}}
@@ -90,12 +90,12 @@ jobs:
     needs: preflight
     runs-on: ubuntu-latest
     steps:
-      - uses: azure/login@v1
+      - uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
         id: azure-login
         with:
           creds: ${{ env.azureCredentials }}
       - name: Create Resource Group
-        uses: azure/CLI@v1
+        uses: azure/CLI@4db43908b9df2e7ac93c8275a8f9a448c59338dd # v1.0.9
         with:
           azcliversion: ${{ env.azCliVersion }}
           inlineScript: |
@@ -103,7 +103,7 @@ jobs:
             az group create --verbose --name ${{ env.resourceGroupForDB }} --location ${{ env.location }}
       - name: Set Up Azure Postgresql to Test dbTemplate
         id: setup-postgresql
-        uses: azure/CLI@v1
+        uses: azure/CLI@4db43908b9df2e7ac93c8275a8f9a448c59338dd # v1.0.9
         with:
           azcliversion: ${{ env.azCliVersion }}
           inlineScript: |
@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout ${{ env.aksRepoUserName }}/azure.liberty.aks
-        uses: actions/checkout@v2
+        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
         with:
           repository: ${{ env.aksRepoUserName }}/azure.liberty.aks
           path: azure.liberty.aks
@@ -147,22 +147,22 @@ jobs:
           echo "artifactName=${artifactName}" >> $GITHUB_ENV
           echo "artifactName=${artifactName}" >> $GITHUB_OUTPUT
       - name: Download artifact for deployment
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@18f0f591fbc635562c815484d73b6e8e3980482e # v1.0.0
         with:
           name: ${{steps.artifact_file.outputs.artifactName}}
-      - uses: azure/login@v1
+      - uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
         id: azure-login
         with:
           creds: ${{ env.azureCredentials }}
       - name: Create Resource Group
-        uses: azure/CLI@v1
+        uses: azure/CLI@4db43908b9df2e7ac93c8275a8f9a448c59338dd # v1.0.9
         with:
           azcliversion: ${{ env.azCliVersion }}
           inlineScript: |
             echo "create resource group" ${{ env.resourceGroupForOpenLibertyAks }}
             az group create --verbose --name ${{ env.resourceGroupForOpenLibertyAks }} --location ${{ env.location }}
       - name: Checkout cargotracker
-        uses: actions/checkout@v2
+        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
         with:
           path: cargotracker
       - name: Prepare parameter file
@@ -173,14 +173,14 @@ jobs:
                   s/#gitUserName#/${aksRepoUserName}/g" \
                   cargotracker/src/test/aks/parameters.json
       - name: Archive parameters.json
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@3446296876d12d4e3a0f3145a3c87e67bf0a16b5 # v1.0.0
         with:
           name: archivefiles
           path: cargotracker/src/test/aks/parameters.json
       # Validate the parameters file in the context of the solution template to be invoked. This will catch some errors before taking the time to start the full deployment.
       - name: Validate Deploy of Open Liberty Server Cluster Domain offer
         id: validate-openliberty-cluster-deployment
-        uses: azure/CLI@v1
+        uses: azure/CLI@4db43908b9df2e7ac93c8275a8f9a448c59338dd # v1.0.9
         with:
           azcliversion: ${{ env.azCliVersion }}
           inlineScript: |
@@ -192,7 +192,7 @@ jobs:
             --template-file ${artifactName}/mainTemplate.json
       - name: Deploy Open Liberty Server Cluster Domain offer
         id: deploy-openliberty-cluster
-        uses: azure/CLI@v1
+        uses: azure/CLI@4db43908b9df2e7ac93c8275a8f9a448c59338dd # v1.0.9
         with:
           azcliversion: ${{ env.azCliVersion }}
           inlineScript: |
@@ -208,13 +208,13 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@0f62d2ad8407a414cddd4790bed06fd9ebda0f56 # v1.4.5
         with:
           java-version: 1.8
       - name: Install jq
         run: |
           sudo apt-get install jq -y
-      - uses: azure/login@v1
+      - uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
         id: azure-login
         with:
           creds: ${{ env.azureCredentials }}
@@ -244,7 +244,7 @@ jobs:
           echo "azureACRUserName=${azureACRUserName}" >> $GITHUB_OUTPUT
           echo "azureACRPassword=${azureACRPassword}" >> $GITHUB_OUTPUT
       - name: Checkout cargotracker
-        uses: actions/checkout@v2
+        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
         with:
           path: cargotracker
       # Build Cargo Tracker with DB and JMS configuration
